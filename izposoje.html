@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Knjižnica - izposoje</title>
+    <meta charset="utf-8">
+    <link rel='stylesheet' href='style.css' />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://kit.fontawesome.com/b6d4649de4.js" crossorigin="anonymous"></script>
+
+</head>
+
+<body>
+    <div class="sidenav">
+        <a href="studenti">Studenti</a>
+        <a href="knjige">Knjige</a>
+        <a href="izposoje">Izposoje</a>
+    </div>
+      
+    <div class="main">
+        <h2>Izposoje</h2>
+
+        <div class="matchIDs">
+            <form>
+            <label>Izberi študenta::</label>
+            <select id="students" name="students"></select><br>
+            <label>Izberi knjigo:</label>
+            <select id="books" name="books"></select>
+            <button type="button" id="izposodi" class="addNewButton">Izvedi izposojo</button>
+            </form>
+                <div id="successMsg" style="display: none; color:green">
+                    <p>Nova izposoja vnesena!</p>
+                </div>               
+        </div>
+
+
+        <div class="aktivneIzposoje">
+            <h4><i class="fas fa-fire-alt"></i> AKTIVNE IZPOSOJE</h4>
+            <table id="borrowTable">
+                <tr id ="firstRowBorrows">
+                    <th>ID Izposoje</th>
+                    <th>ID Študenta</th>
+                    <th>Ime študenta</th>  
+                    <th>Priimek študenta</th>   
+                    <th>ID Knjige</th>                    
+                    <th>Naslov knjige</th>                        
+                    <th>Avtor knjige</th>
+                    <th>VRNI</th>
+                </tr>
+
+            </table>
+        </div>
+
+        <hr>
+        <div class="row">
+            <div class="columnStudents">
+                <h4><i class="fas fa-user-graduate"></i> SEZNAM ŠTUDENTOV</h4>
+                <table id="studentsTable">
+                    <tr id ="firstRowStudents">
+                        <th>ID</th>
+                        <th>Ime</th>
+                        <th>Priimek</th>                        
+                    </tr>
+                </table>
+            </div>
+            <div class="columnBooks">
+                <h4><i class="fas fa-book"></i> SEZNAM KNJIG</h4>
+                <table id="booksTable">
+                    <tr id ="firstRowBooks">
+                        <th>ID</th>
+                        <th>Avtor</th>
+                        <th>Naslov</th>
+                        <th>Na voljo</th>
+                    </tr>
+                </table>
+            </div>
+          </div>
+        
+       
+
+
+    </div>
+
+<script>
+    //funkcija ki preveri ali je knjiga na voljo za izposojo
+    function available(book){
+        if (book.available === "1"){
+            return "<td style='color:green;'>Na voljo</td>";
+        }
+        else if (book.available === "0") {
+            return "<td style='color:red;'>Izposojena</td>";
+        }
+    }
+
+    function availableBook(bookID) {
+        $.ajax({
+            url: "available.php",
+            method: "POST",
+            data: {
+                bookID : bookID
+            },
+            success: function(){
+                readIzposoje();
+            },
+            error: function() {
+                alert("Error!");
+            }
+         })
+    }
+
+    function makeAvailable(bookID) {
+        $.ajax({
+            url: "makeAvailable.php",
+            method: "POST",
+            data: {
+                bookID : bookID
+            },
+            success: function() {
+            },
+            error: function() {
+                alert("Error!");
+            }
+        })
+    }
+
+    function returnBook(borrowID) {
+        $.ajax({
+            url: "returnBook.php",
+            method: "POST",
+            data: {
+                borrowID : borrowID
+            },
+            success:function() {
+                readIzposoje();
+                $('#successMsg').fadeOut();              
+            },
+            error: function () {
+            alert("Error!");
+            }
+        })
+    }
+
+
+    function readBooks() {
+            $.ajax({
+            url:"readBook.php",
+            method:"POST",
+            data: {
+            },
+            dataType:"JSON",
+            success:function(data)
+            {                    
+                $( "#booksTable").find( "tr:not(#firstRowBooks)" ).remove();
+                var vsebina = "";
+                data.forEach(function(book) {
+                    //vstavim šele po prvi vrstici (headerja ne spreminjam)
+                    $("#firstRowBooks").after("<tr><td>" + book.bookID + " </td><td>" + book.author +
+                    "</td><td>" + book.title + "</td>" +
+                    //tukaj preverim če je knjiga na voljo
+                    available(book) + "</td></tr>");                    
+                    if (book.available == "1"){
+                        vsebina += "<option value=" + book.bookID + ">" + book.bookID + " - " + book.title + "</option>"; 
+                    }
+                    document.getElementById("books").innerHTML = vsebina;
+                })                        
+            },
+            error: function () {
+                console.log("Error!");
+            }
+        })
+        }
+
+    function readIzposoje() {
+            $.ajax({
+            url:"readIzposoje.php",
+            method:"POST",
+            data: {
+            },
+            dataType:"JSON",
+            success:function(data)
+            {              
+                $('#borrowTable').css("display", "block");
+                $('#borrowTable').find( "tr:not(#firstRowBorrows)" ).remove();
+                data.forEach(function(borrow) {
+                    //vstavim šele po prvi vrstici (headerja ne spreminjam)
+                    $("#firstRowBorrows").after("<tr><td>" + borrow.borrowID + " </td><td>" + borrow.ID +
+                    "</td><td>" + borrow.stdName + "</td><td>" + borrow.stdSurname + "</td>" +
+                    "<td>" + borrow.bookID + "</td><td>" + borrow.title + "</td><td>" + borrow.author +
+                    "<td><button id='deleteBtn' bookID='" + borrow.bookID + "' borrowID='" + borrow.borrowID + "' role='returnBook'>Vrni</button></td></tr>")                    
+                })
+                $( "button[role='returnBook']" ).click(function() {
+                    returnBook($(this).attr("borrowID"));
+                    makeAvailable($(this).attr("bookID"));
+                    readBooks();
+                    readIzposoje();
+                });
+                
+            },
+            error: function () {
+            //alert("Error!");
+            }
+        });
+        }
+
+
+$(document).ready(function () {
+        //read students
+        $.ajax({
+        url:"read.php",
+        method:"POST",
+        data: {
+        },
+        dataType:"JSON",
+        success:function(data) {
+            $( "#studentsTable").find( "tr:not(#firstRowStudents)" ).remove();
+            var dropdown;
+            data.forEach(function(user) {
+                //vstavim šele po prvi vrstici (headerja ne spreminjam)
+                $("#firstRowStudents").after("<tr><td>" + user.ID + " </td><td>" + user.stdName +
+                "</td><td>" + user.stdSurname + "</td></tr>")
+                dropdown += "<option value=" + user.ID + ">"+ user.ID + " - " + user.stdName + " " + user.stdSurname + "</option>";
+                document.getElementById("students").innerHTML = dropdown;
+
+            });},
+            error: function () {
+            alert("Error!");
+        }
+        })
+        //read books
+        readBooks();
+        
+        
+        //ob kliku "izposodi" vstavim v "borrows" stdID in bookID
+        $("#izposodi").click(function() {
+            $.post(
+                "izposodi.php",
+                {
+                    studentID: $('#students').val(),
+                    bookID: $('#books').val(),
+                },
+                function(data, status){
+                    var bookID = $("#books").val();
+                    const userData = JSON.parse(data);
+                    $('#successMsg').fadeIn();
+                    readIzposoje();
+                    availableBook(bookID);
+                    readBooks();
+                    }               
+                    ).fail(function(response) {
+                });
+        });
+        //beri iz tabele: izposoje
+        readIzposoje();        
+});             
+</script>
+
+
+</body>
+
+</html>

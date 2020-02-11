@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Knjižnica</title>
+    <meta charset="utf-8">
+    <link rel='stylesheet' href='style.css' />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
+</head>
+<body>
+
+<div class="sidenav">
+    <a href="studenti">Studenti</a>
+    <a href="knjige">Knjige</a>
+    <a href="izposoje">Izposoje</a>
+</div>
+  
+<div class="main">
+    <h2>Knjige</h2>        
+
+    <form>
+        <div class="addNewBook">
+            Avtor: <input type="text" placeholder="Vnesite avtorja.." id="avtorKnjige"><br>
+            Naslov knjige: <input type="text" placeholder="Vnesite naslov knjige.." id="naslovKnjige"><br>
+            Leto izdaje: <input type="number" placeholder="Vnesite leto izdaje.." id="letoIzdaje"><br>
+            <button type="button" id="submit" class="addNewButton">Dodaj knjigo</button>
+            <br><hr>
+        </div>
+    </form>
+    <!-- sporočilo ob uspešno dodani knjigi v bazo-->
+    <div id="successMsg" style="display: none; color:green">
+        <p>Knjiga uspešno dodana!</p>
+    </div>
+    <button type="button" id="show" class="showBooks">Prikaži seznam knjig</button>
+    <br>
+    <table id="booksTable" style="display: none;">
+        <tr id ="firstRow">
+            <th>ID</th>
+            <th>Avtor</th>
+            <th>Naslov</th>
+            <th>Leto izdaje</th>
+            <th>Na voljo</th>
+            <th><img src="images/delete.png" alt="Izbriši knjigo" height="22" width="22">
+            </th>
+        </tr>
+    </table>
+
+    <script>
+        //funkcija ki preveri ali je knjiga na voljo za izposojo
+        function available(book){
+            if (book.available === "1"){
+                return "<td style='color:green;'>Na voljo</td>";
+            }
+            else {
+                return "<td style='color:red;'>Izposojena</td>";
+
+            }
+        }
+
+        //funkcija ki izbriše izbrano knjigo
+        function deleteBook(bookID) {
+                    $.ajax({
+                        url: "removeBook.php",
+                        method: "POST",
+                        data: {
+                            bookID : bookID
+                        },
+                        success:function() {
+                            //s pomočjo funkcije getBooks osvežimo tabelo
+                            getBooks();
+                            $('#successMsg').fadeOut();
+                        },
+                        error: function (xhr, ajaxOptions, thrownError) {
+                            alert(xhr.status);
+                            alert(thrownError);
+                        }
+
+                    })
+                }
+
+        function getBooks() {
+            $.ajax({
+                    url:"readBook.php",
+                    method:"POST",
+                    data: {
+                    },
+                    dataType:"JSON",
+                    success:function(data)
+                    {                    
+                        $('#booksTable').css("display", "block");
+                        $( "#booksTable").find( "tr:not(#firstRow)" ).remove();
+                        data.forEach(function(book) {
+                            //vstavim šele po prvi vrstici (headerja ne spreminjam)
+                            $("#firstRow").after("<tr><td>" + book.bookID + " </td><td>" + book.author +
+                            "</td><td>" + book.title + "</td><td>" + book.year + "</td>" +
+                            //tukaj preverim če je knjiga na voljo
+                            available(book) +
+                            "<td><button id='deleteBtn' bookID='" + book.bookID + "' role='deleteBook'>Izbriši</button></td></tr>")
+                        })
+                        //funkcija deleteBook ob kliku IZBRIŠI gumba
+                        $( "button[role='deleteBook']" ).click(function() {
+                            deleteBook($(this).attr("bookID"));
+                        })
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        alert(xhr.status);
+                        alert(thrownError);
+                    }
+            }) 
+        }
+
+
+
+        $(document).ready(function () {   
+        
+            // ob pritisku gumba submit (dodaj)
+             $("#submit").click(function() {
+               $.post(
+                       "insertBook.php",
+                       {
+                           author: $('#avtorKnjige').val(),
+                           title: $('#naslovKnjige').val(),
+                           year: $('#letoIzdaje').val()
+                       },
+                       function(data, status){
+                           //izprazni form
+                           $('#avtorKnjige').val("");
+                           $('#naslovKnjige').val("");
+                           $('#letoIzdaje').val("");
+                           
+                            const userData = JSON.parse(data);
+                            getBooks();
+                                //prikaže sporočilo: "knjiga uspešno dodana!"
+                            $('#successMsg').fadeIn();
+                                 
+                           }               
+                   ).fail(function(response) {
+                   });
+            });
+        });
+
+        $("#show").click(function() {
+            getBooks();
+        })
+        
+    </script>
+
+
+
+    </div>
+
+
+</body>
+
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Knjižnica</title>
+    <meta charset="utf-8">
+    <link rel='stylesheet' href='style.css' />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+</head>
+
+<body>
+    <!-- stranski meni -->
+    <div class="sidenav">
+        <a href="studenti">Studenti</a>
+        <a href="knjige">Knjige</a>
+        <a href="izposoje">Izposoje</a>
+    </div>
+
+    
+
+    <!-- okno zunaj menija -->
+    <div class="main">
+        <h2>Študenti</h2>
+ 
+        <form>
+            <div class="addNewStudent">
+            Ime: <input type="text" placeholder="Vnesite ime.." id="imeStudenta"><br>
+            Priimek: <input type="text" placeholder="Vnesite priimek.." id="priimekStudenta"><br>
+            Leto rojstva: <input type="number" placeholder="Vnesite leto rojstva.." id="letnicaStudenta"><br>
+            <button type="button" id="submit" class="addNewButton">Dodaj študenta</button>
+            <br><hr>
+        </div>
+        </form>
+        
+
+        <div id="successMsg" style="display: none; color:green">
+            <p>Študent uspešno dodan!</p>
+        </div>
+
+        <button type="button" id="show" class="showStudents">Prikaži seznam študentov</button>
+        <br>
+        <table id="studentsTable" style="display: none;">
+            <tr id ="firstRow">
+                <th>ID</th>
+                <th>Ime</th>
+                <th>Priimek</th>
+                <th>Leto rojstva</th>
+                <th><img src="images/delete.png" alt="Izbriši študenta" height="22" width="22">
+                </th>
+            </tr>
+        </table>
+
+
+        <script>
+
+            function deleteStudent(userID) {
+                $.ajax({
+                    url: "remove.php",
+                    method: "POST",
+                    data: {
+                        userID : userID
+                    },
+                    success:function() {
+                        //z get students pobriše input form in osveži stran
+                        getStudents();
+                        $('#successMsg').fadeOut();
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        alert(xhr.status);
+                        alert(thrownError);
+                    }
+                })
+            }
+
+            function getStudents() {
+                $.ajax({
+                    url:"read.php",
+                    method:"POST",
+                    data: {
+                    },
+                    dataType:"JSON",
+                    success:function(data) {                            
+                        $('#studentsTable').css("display", "block");
+                        $( "#studentsTable").find( "tr:not(#firstRow)" ).remove();
+                        data.forEach(function(user) {
+                            //vstavim šele po prvi vrstici (headerja ne spreminjam)
+                            $("#firstRow").after("<tr><td>" + user.ID + " </td><td>" + user.stdName +
+                            "</td><td>" + user.stdSurname + "</td><td>" + user.StdBirthYear + "</td>" +
+                            "<td><button id='deleteBtn' userID='" + user.ID + "' role='deleteButton'>Izbriši</button></td></tr>")
+                        });
+                        $( "button[role='deleteButton']" ).click(function() {
+                            deleteStudent($(this).attr("userID"));
+                        })
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        alert(xhr.status);
+                        alert(thrownError);
+                    }
+                });
+            }
+
+            $(document).ready(function () {   
+       
+
+                // ob pritisku gumba submit (dodaj)
+                $("#submit").click(function() {
+                    $.post(
+                        "insert.php",
+                        {
+                            imeStudenta: $('#imeStudenta').val(),
+                            priimekStudenta: $('#priimekStudenta').val(),
+                            letnicaStudenta: $('#letnicaStudenta').val()
+                        },
+                        function(data, status){
+                            //izprazni form
+                            $('#imeStudenta').val("");
+                            $('#priimekStudenta').val("");
+                            $('#letnicaStudenta').val("");
+                            const userData = JSON.parse(data);
+
+                            getStudents();
+                            //prikaže sporočilo: "študent uspešno dodan!"
+                            $('#successMsg').fadeIn();
+                            }               
+                        ).fail(function(response) {
+                        });
+                });   
+
+                //ob pritisku gumba show (prikaži študente)
+                
+                $("#show").click(function() {
+                    $('#successMsg').fadeOut();
+                   getStudents();
+                })
+                
+                
+                
+            });
+        </script>
+
+
+
+    </div>
+
+</body>
+
+</html>

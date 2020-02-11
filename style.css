@@ -1,0 +1,129 @@
+body {
+  font-family: "Lato", sans-serif;
+  background-color: rgb(214, 255, 241);
+}
+
+h4 {
+  font-size: 24px;
+  font-style: italic;
+  line-height: 40px;
+  letter-spacing: -1px;
+  color: rgb(68, 0, 195);
+  margin: 0 0 0 0;
+  padding: 0 0 0 0;
+  font-weight: 100;
+}
+
+.studentsTable {
+  border-collapse: collapse;
+  width: 100%;
+  float: center;
+}
+
+.studentsTable, th{
+  border: 2px solid black;
+  font-size: 20px;
+  text-align: center;
+  padding: 5px;
+  border-radius: 5px;
+
+}
+
+.sidenav {
+  height: 100%;
+  width: 160px;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  padding-top: 20px;
+}
+
+.sidenav a {
+  padding: 6px 8px 6px 16px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+}
+
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+.main {
+  margin-left: 160px; /* Same as the width of the sidenav */
+  font-size: 20px; /* Increased text to enable scrolling */
+  padding: 0px 10px;
+  width: 90%;
+}
+
+@media screen and (max-height: 450px) {
+  .sidenav {padding-top: 15px;}
+  .sidenav a {font-size: 18px;}
+}
+
+.addNewButton {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 3px 15px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+.addNewStudent, .addNewBook, .matchIDs {
+  float: right;
+  width: 100%;
+}
+
+.showStudents, .showBooks {
+  background-color: rgb(27, 126, 255); 
+  color: white;
+  padding: 3px 15px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+#deleteBtn  {
+  background-color: rgb(173, 0, 0); 
+  color: white;
+  padding: 3px 15px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+
+/* Create two equal columns that floats next to each other */
+.columnStudents  {
+  float: left;
+  width: 30%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.columnBooks {
+  float: left;
+  width: 70%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
